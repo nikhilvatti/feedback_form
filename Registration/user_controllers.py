@@ -38,7 +38,7 @@ class UserLogin(Resource):
 @registion_namespace.route("/login/upload")
 class post_feedback(Resource):
     @jwt_required()
-    def get(self):
+    def post(self):
         description=request.form.get('description')
         image=request.files.get('image')
         id=request.form.get("id")
@@ -48,7 +48,7 @@ class post_feedback(Resource):
         result=UserOperations.matching_token(self,id,token_user.get('email'))
 
         if result=="user verified":
-            document={"image":image_encode,"description":description}
+            document={"image":image_encode,"description":description,"total_dis_likes":0,"total_likes":0}
             post=UserOperations.post_feedback(self,id,document)
             return post
 
@@ -65,7 +65,7 @@ class AddLike(Resource):
         data=request.json
         token_user=get_jwt_identity()
         user_id=UserOperations.getting_id_from_token(self,token_user["email"])
-        result=UserOperations.add_likes(self,str(user_id),data['id'],data['product_id'])
+        result=UserOperations.add_likes(self,str(user_id),data['id'],str(data['product_id']))
         return result
     
 @registion_namespace.route("/login/product/dislike")
@@ -75,16 +75,47 @@ class AddDisLike(Resource):
         data=request.json
         token_user=get_jwt_identity()
         user_id=UserOperations.getting_id_from_token(self,token_user["email"])
-        result=UserOperations.add_dislikes(self,str(user_id),data['id'],data['product_id'])
+        result=UserOperations.add_dislikes(self,str(user_id),data['id'],str(data['product_id']))
         return result
 
 
 @registion_namespace.route("/login/product/comment")
 class AddComments(Resource):
     @jwt_required()
-    def get(self):
+    def post(self):
         data=request.json
         token_user=get_jwt_identity()
         user_id=UserOperations.getting_id_from_token(self,token_user["email"])
-        result=UserOperations.add_comments(self,str(user_id),data['id'],data['product_id'],data['comment'])
+        result=UserOperations.add_comments(self,str(user_id),data['id'],str(data['product_id']),data['comment'])
         return result
+
+@registion_namespace.route("/login/product/like_dislike")
+class ChangeResponse(Resource):
+    @jwt_required()
+    def put(self):
+        data=request.json
+        token_user=get_jwt_identity()
+        user_id=UserOperations.getting_id_from_token(self,token_user["email"])
+        result=UserOperations.change_from_like_to_dislike(self,str(user_id),data['id'],str(data["product_id"]))
+        return result
+
+@registion_namespace.route('/login/product/dislike_like')
+class ChangeResponse1(Resource):
+    @jwt_required()
+    def put(self):
+        data=request.json
+        token_user=get_jwt_identity()
+        user_id=UserOperations.getting_id_from_token(self,token_user["email"])
+        result=UserOperations.change_from_dislike_to_like(self,str(user_id),data['id'],str(data["product_id"]))
+        return result
+
+@registion_namespace.route("/login/product/delete_comment")
+class DeleteComment(Resource):
+    @jwt_required()
+    def put(self):
+        data=request.json
+        token_user=get_jwt_identity()
+        user_id=UserOperations.getting_id_from_token(self,token_user["email"])
+        result=UserOperations.delete_comment(self,user_id,data["id"],str(data['product_id']))
+        return result
+
